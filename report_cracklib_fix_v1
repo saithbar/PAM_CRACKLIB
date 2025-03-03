@@ -1,0 +1,57 @@
+#!/bin/bash
+#*******Begin Comment**************
+.SYNOPSIS
+#This script is to audit linux servers their privileged accounts.
+#  Script for privileged accounts
+# version V01 Debian
+# Autor: Saith Barreto
+# Fecha: Septiembre 2020
+#*******End Comment**************
+#PATH=$PATH:/sbin:/bin:/usr/sbin:/usr/bin
+
+##informations of Server
+H=$(hostname -f | cut -d. -f1)
+OSV=$(lsb_release -rs)
+install=$(apt-mark showinstall | grep  "cracklib-runtime")
+[ -z "$install" ] && install=$"No install"
+###report lib_cracklib
+
+[ -z "$SHA" ] && SHA=$(grep -oP sha512 /etc/pam.d/common-password  | head -1 | cut -d: -f2)
+
+
+PWD_Length=$(grep -Eo 'minlen=[0-9]{1,2}' /etc/pam.d/common-password | head -1| cut -d: -f2)
+[ -z "$PWD_Length" ] && PWD_Length=$"Not Set"
+
+Password_History=$(grep -Eo 'remember=[0-9]{1,2}' /etc/pam.d/common-password | head -1 | cut -d: -f2)
+[ -z "$Password_History" ] && Password_History=$"Not Set"
+
+lcredit=$(grep -Eo "lcredit=-[0-9]" /etc/pam.d/common-password | head -1 | awk -F "=" '{print $2}')
+[ -z "$lcredit" ] && lcredit=$"not Set"
+
+ocredit=$(grep -Eo "ocredit=-[0-9]" /etc/pam.d/common-password | head -1 | awk -F "=" '{print $2}')
+[ -z "$ocredit" ] && ocredit=$"not Set"
+
+maxrepeat=$(grep ^[^#]  /etc/ssh/sshd_config | grep -Eo "MaxAuthTries [0-9]"  | head -1 | awk -F " " '{print $2}')
+[ -z "$maxrepeat" ] && maxrepeat=$"not Set"
+
+ucredit=$(grep -Eo "ucredit=-[0-9]" /etc/pam.d/common-password | head -1 | awk -F "=" '{print $2}')
+[ -z "$ucredit" ] && ucredit=$"not Set"
+
+dcredit=$(grep -Eo "dcredit=-[0-9]" /etc/pam.d/common-password | head -1 | awk -F "=" '{print $2}')
+[ -z "$dcredit" ] && dcredit=$"not Set"
+
+Password_expiration_delay=$(grep "PASS_MAX_DAYS" /etc/login.defs | grep -v '#' | head -1)
+[ -z "$Password_expiration_delay" ] && Password_expiration_delay=$"not Set"
+
+Lock_Time=$(grep -Eo  'unlock_time=[0-9]{1,4}' /etc/pam.d/common-auth | head -1 | cut -d: -f2)
+[ -z "$Lock_Time" ] && Lock_Time=$"Not Set"
+
+Lock_After=$(grep -Eo  'deny=[0-9]' /etc/pam.d/common-auth| head -1)
+[ -z "$Lock_After" ] && Lock_After=$"Not Set"
+
+
+##report print
+echo "$H;$OSV;$install;$SHA;$Password_History;$PWD_Length;$lcredit;$ocredit;$ucredit;$dcredit;$maxrepeat;$Lock_Time;$Lock_After;$Password_expiration_delay;$IP;$fsvar;" > /samba/Users/report_linux.csv
+
+
+
